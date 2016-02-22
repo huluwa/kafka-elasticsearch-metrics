@@ -1,6 +1,5 @@
 package com.ctrip.kafka;
 
-
 import java.util.Date;
 import java.util.Map;
 
@@ -26,8 +25,10 @@ public class KafkaMetricItem {
 
 	private String metricType;
 
+	private String hostname;
+
 	public KafkaMetricItem(MetricName metricName, Map<String, Number> dimensions, MetricNameParser parser, Date time,
-	      String metricType) {
+	      String metricType, String hostname) {
 		this.setName(metricName.getName());
 		this.setGroup(metricName.getGroup());
 		this.setScope(metricName.getScope());
@@ -37,6 +38,7 @@ public class KafkaMetricItem {
 		this.setParserName(parser.getName());
 		this.setTags(parser.getTags());
 		this.setMetricType(metricType);
+		this.setHostname(hostname);
 	}
 
 	public Map<String, Number> getDimensions() {
@@ -80,7 +82,7 @@ public class KafkaMetricItem {
 	}
 
 	public void setGroup(String group) {
-		this.group = group;
+		this.group = replaceSpecialChars(group);
 	}
 
 	public void setMetricType(String metricType) {
@@ -88,7 +90,7 @@ public class KafkaMetricItem {
 	}
 
 	public void setName(String name) {
-		this.name = name;
+		this.name = replaceSpecialChars(name);
 	}
 
 	public void setParserName(String parserName) {
@@ -96,11 +98,15 @@ public class KafkaMetricItem {
 	}
 
 	public void setScope(String scope) {
-		this.scope = scope;
+		this.scope = replaceSpecialChars(scope);
 	}
 
 	public void setTags(Map<String, String> tags) {
 		this.tags = tags;
+		if (tags != null)
+			for (Map.Entry<String, String> entry : tags.entrySet()) {
+				tags.put(entry.getKey(), replaceSpecialChars((entry.getValue())));
+			}
 	}
 
 	public void setTime(Date time) {
@@ -108,7 +114,23 @@ public class KafkaMetricItem {
 	}
 
 	public void setType(String type) {
-		this.type = type;
+		this.type = replaceSpecialChars(type);
 	}
 
+	static String replaceSpecialChars(String str) {
+		if (str == null) {
+			return str;
+		}
+		str = str.replace(" ", "_");
+		str = str.replace("-", "_");
+		return str;
+	}
+
+	public String getHostname() {
+		return hostname;
+	}
+
+	public void setHostname(String hostname) {
+		this.hostname = hostname;
+	}
 }

@@ -18,6 +18,7 @@ import static com.ctrip.kafka.Dimension.stddev;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.net.InetAddress;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
@@ -65,11 +66,23 @@ public class ElasticSearchReporter extends AbstractPollingReporter implements Me
 
 	private MetricNameParser parser;
 
+	private String hostname;
+
 	public ElasticSearchReporter(MetricsRegistry registry, TransportClient client, String esIndexPrefix) {
 		super(registry, REPORTER_NAME);
 		this.client = client;
 		this.esIndexPrefix = esIndexPrefix + "-";
 		this.clock = Clock.defaultClock();
+		hostname = "unknown";
+		try {
+			InetAddress inetAddress = InetAddress.getLocalHost();
+			hostname = inetAddress.getCanonicalHostName();
+			if (hostname == null || hostname.length() == 0) {
+				hostname = inetAddress.getHostAddress();
+			}
+		} catch (Exception e) {
+		}
+		hostname = KafkaMetricItem.replaceSpecialChars(hostname);
 	}
 
 	private Boolean isDoubleParsable(final Object o) {
@@ -205,7 +218,7 @@ public class ElasticSearchReporter extends AbstractPollingReporter implements Me
 		StringBuilder indexId = new StringBuilder(parser.getName()).append("_").append(clock.time());
 		IndexRequestBuilder builder = client.prepareIndex(esIndexPrefix + INDEX_DATE_FORMAT.format(time),
 		      metricName.getGroup(), indexId.toString());
-		KafkaMetricItem item = new KafkaMetricItem(metricName, dimensionValue, parser, time, metricType);
+		KafkaMetricItem item = new KafkaMetricItem(metricName, dimensionValue, parser, time, metricType, hostname);
 		try {
 			String source = JsonUtils.toString(item);
 			IndexResponse response = builder.setSource(source).execute().actionGet();

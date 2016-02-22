@@ -18,7 +18,8 @@ public class JsonUtilsTest {
 		MetricNameParser parser = new MetricNameParser();
 		Date time = new Date();
 		String metricType = "metricType";
-		KafkaMetricItem item = new KafkaMetricItem(metricName, dimensions, parser, time, metricType);
+		String hostname = "1.1.1.1";
+		KafkaMetricItem item = new KafkaMetricItem(metricName, dimensions, parser, time, metricType, hostname);
 		String output = null;
 		try {
 			output = JsonUtils.toString(item);
